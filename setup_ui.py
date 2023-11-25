@@ -48,12 +48,13 @@ class SetupMainWindow:
         #self.ui.setup_ui(self)
 
     def CreateNewFach(self,parent):
-        self.ui.verticalLayout_10.addWidget(PyFach(
+        fach=PyFach(
             parent=parent,
             app_parent = parent,
             bg_color=self.themes["app_color"]["dark_one"],
-        ))
-
+        )
+        self.ui.verticalLayout_10.addWidget(fach)
+        self.faecher.append(fach)
     # SETUP MAIN WINDOW WITH CUSTOM PARAMETERS
     # ///////////////////////////////////////////////////////////////
     def setup_gui(self,parent):

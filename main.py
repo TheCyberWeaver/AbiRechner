@@ -19,6 +19,7 @@ from qt_core import *
 from gui.widgets import *
 from PySide6.QtWidgets import QApplication, QMainWindow, QGraphicsScene, QFileDialog, QMessageBox
 from gui.core.json_settings import Settings
+from gui.core.json_themes import Themes
 
 import sys
 import numpy as np
@@ -86,9 +87,6 @@ class AbiRechner(QWidget):
         self.AddedUI.push_button_New.clicked.connect(lambda: self.AddedUI.CreateNewFach(self))
         self.AddedUI.push_button_Calculate.clicked.connect(lambda: self.calculateNote())
 
-        #Tab 2
-        #self.push_button_6.clicked.connect(lambda: self.openFile())
-        #self.push_button_5.clicked.connect(lambda: self.Conversion())
 
     # ///////////////////////////////////////////////////////////////////////////////////////////////
     # Tab 1
@@ -96,6 +94,12 @@ class AbiRechner(QWidget):
     def checkFach(self):
         return True
     def calculateNote(self):
+
+        if not self.checkFach():
+            dlg = CalculateFailedDialog()
+            dlg.setWindowTitle("Calculation Failed!")
+            dlg.exec_()
+            return
         totalNote=0
         for Fach in self.AddedUI.faecher:
             sumOfFach=0
@@ -110,20 +114,65 @@ class AbiRechner(QWidget):
                 totalNote+=sumOfFach*2
             else:
                 totalNote += sumOfFach
-        print(totalNote)
-    # ///////////////////////////////////////////////////////////////////////////////////////////////
-    # Tab 2
-    # ///////////////////////////////////////////////////////////////////////////////////////////////
-    def openFile(self):
-        self.filePath, _ = QFileDialog.getOpenFileName(
-            self,
-            "选择你要上传的图片",  # 标题
-            r"D:\\",  # 起始目录
-            "图片类型 (*.png *.jpg *.bmp)"  # 选择类型过滤项，过滤内容在括号中
+
+        dlg = CalculationOutputPanel(totalNote)
+        dlg.setWindowTitle("Calculation Success!")
+        dlg.exec_()
+        #print(totalNote)
+
+
+class CalculateFailedDialog(QDialog):
+    def __init__(self):
+        super().__init__()
+
+        self.setWindowTitle("HELLO!")
+
+        QBtn = QDialogButtonBox.Ok | QDialogButtonBox.Cancel
+
+        self.buttonBox = QDialogButtonBox(QBtn)
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.reject)
+
+        self.layout = QVBoxLayout()
+        message = QLabel("Something happened, is that OK?")
+        self.layout.addWidget(message)
+        self.layout.addWidget(self.buttonBox)
+        self.setLayout(self.layout)
+
+class CalculationOutputPanel(QDialog):
+    def __init__(self,note):
+        super().__init__()
+        self.settings = Settings("").items
+        self.themes = Themes().items
+        self.setWindowTitle("Success!")
+
+        self.setMinimumHeight(200)
+        self.setMinimumWidth(300)
+
+        notePercentage=round(note/900*100)
+        self.circular_progress_1 = PyCircularProgress(
+            value=notePercentage,
+            progress_color=self.themes["app_color"]["pink"],
+            text_color=self.themes["app_color"]["context_color"],
+            font_size=14,
+            bg_color=self.themes["app_color"]["dark_four"],
         )
-        self.line_edit_7.setText(self.filePath)
 
+        self.circular_progress_1.setFixedSize(70, 70)
 
+        self.title_label = QLabel()
+        self.title_label.setAlignment(Qt.AlignVCenter)
+        title_size = 10
+        font_family = "Segoe UI"
+        self.title_label.setStyleSheet(f'font: {title_size}pt "{font_family}"')
+        self.title_label.setText("Total Points:")
+
+        self.layout = QVBoxLayout()
+        self.layout.setAlignment(Qt.AlignCenter)
+        self.layout.addWidget(self.title_label)
+        self.layout.addWidget(self.circular_progress_1)
+
+        self.setLayout(self.layout)
 if __name__ == "__main__":
     # 初始化QApplication，界面展示要包含在QApplication初始化之后，结束之前
     app = QApplication(sys.argv)
