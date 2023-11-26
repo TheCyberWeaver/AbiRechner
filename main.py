@@ -22,10 +22,7 @@ from gui.core.json_settings import Settings
 from gui.core.json_themes import Themes
 
 import sys
-import numpy as np
-#from readonly.HeightsModule import *
-#import matplotlib
-#import matplotlib.pyplot as plt
+
 
 #matplotlib.use('Qt5Agg')
 
@@ -34,28 +31,37 @@ import numpy as np
 from ui_AbiRechner import Ui_Form
 from setup_ui import SetupMainWindow
 #An Example of ploting graphs in pyside6
-"""
-class MplCanvas(FigureCanvasQTAgg):
 
-    def __init__(self, parent=None, width=5, height=4, dpi=100):
-        fig = Figure(figsize=(width, height), dpi=dpi)
-        self.axes = fig.add_subplot(111)
-        super(MplCanvas, self).__init__(fig)
+converting_table=[(300,4.0),(301,3.9),(319,3.8),(337,3.7),(355,3.6),(373,3.5),(391,3.4),(409,3.3),(427,3.2),(445,3.1),
+                  (463,3.0),(481,2.9),(499,2.8),(517,2.7),(535,2.6),(553,2.5),(571,2.4),(589,2.3),(607,2.2),(625,2.1),
+                  (643,2.0),(661,1.9),(679,1.8),(697,1.7),(715,1.6),(733,1.5),(751,1.4),(769,1.3),(787,1.2),(805,1.1),(823,1.0)]
 
-#An Example of ploting graphs in pyside6
-class MainWindow(QMainWindow):
 
-    def __init__(self, *args, **kwargs):
-        super(MainWindow, self).__init__(*args, **kwargs)
+def convert900to6(note: int):
+    if note<300:
+        return 5.0
+    if note>900:
+        return 0
 
-        # Create the maptlotlib FigureCanvas object,
-        # which defines a single set of axes as self.axes.
-        sc = MplCanvas(self, width=5, height=4, dpi=100)
-        sc.axes.plot([0,1,2,3,4], [10,1,20,3,40])
-        self.setCentralWidget(sc)
+    low = 0
+    high = len(converting_table) - 1
 
-        self.show()
-"""
+    while low <= high:
+
+        mid = (low + high) // 2
+
+        guess, note_6 = converting_table[mid]
+
+        if guess == note:
+            return note_6
+
+        if guess > note:
+            high = mid - 1
+
+        else:
+            low = mid + 1
+    guess, note_6 = converting_table[high]
+    return note_6
 class AbiRechner(QWidget):
 
     def __init__(self):
@@ -92,28 +98,55 @@ class AbiRechner(QWidget):
     # Tab 1
     # ///////////////////////////////////////////////////////////////////////////////////////////////
     def checkFach(self):
-        return True
+
+
+        hasTwoSameFach=False
+        #BlockOne
+        hasDeutsch=False
+        hasMathe=False
+        hasGesellschaftswissenschaft=False
+
+        #BlockTwo
+        hasfremdSprache=False
+        hasMusikOderKunst=False
+        hasSport=False
+        hasGemeinschaftskundeOderGeo=False
+        hasReligionOderPhilo=False
+
+        for Fach in self.AddedUI.faecher:
+            Fach.fachName
+
+        return "success"
+
     def calculateNote(self):
 
-        if not self.checkFach():
-            dlg = CalculateFailedDialog()
+        if self.checkFach()!="success":
+            dlg = CalculateFailedDialog(self.checkFach())
             dlg.setWindowTitle("Calculation Failed!")
             dlg.exec_()
             return
         totalNote=0
+
+        blockOne=0
+        for Fach in self.AddedUI.faecher[:5]:
+            if Fach.line_edits[4].text()!="":
+                blockOne+=int(Fach.line_edits[4].text())*4
+
+        blockTwo=0
         for Fach in self.AddedUI.faecher:
             sumOfFach=0
             currentCountOfSemester=0
-            for Semester in Fach.line_edits:
+            for semesterIndex in range(4):
                 currentCountOfSemester+=1
-                if Semester.text()!="":
-                    sumOfFach+=int(Semester.text())
+                if Fach.line_edits[semesterIndex].text()!="":
+                    sumOfFach+=int(Fach.line_edits[semesterIndex].text())
                 else:
                     sumOfFach+=sumOfFach/currentCountOfSemester
             if Fach._istLeistungsfach:
-                totalNote+=sumOfFach*2
+                blockTwo+=sumOfFach*2
             else:
-                totalNote += sumOfFach
+                blockTwo += sumOfFach
+        totalNote=blockTwo+blockOne
 
         dlg = CalculationOutputPanel(totalNote)
         dlg.setWindowTitle("Calculation Success!")
@@ -121,11 +154,11 @@ class AbiRechner(QWidget):
         #print(totalNote)
 
 
-class CalculateFailedDialog(QDialog):
-    def __init__(self):
-        super().__init__()
 
-        self.setWindowTitle("HELLO!")
+
+class CalculateFailedDialog(QDialog):
+    def __init__(self,errorMessage:str):
+        super().__init__()
 
         QBtn = QDialogButtonBox.Ok | QDialogButtonBox.Cancel
 
@@ -134,7 +167,7 @@ class CalculateFailedDialog(QDialog):
         self.buttonBox.rejected.connect(self.reject)
 
         self.layout = QVBoxLayout()
-        message = QLabel("Something happened, is that OK?")
+        message = QLabel(errorMessage)
         self.layout.addWidget(message)
         self.layout.addWidget(self.buttonBox)
         self.setLayout(self.layout)
@@ -158,10 +191,27 @@ class CalculationOutputPanel(QDialog):
             bg_color=self.themes["app_color"]["dark_four"],
         )
 
-        self.circular_progress_1.setFixedSize(70, 70)
+        self.circular_progress_1.setFixedSize(100, 100)
+
+
+        self.line_edit = PyLineEdit(
+            text=str(convert900to6(note))+" <"+str(round(note))+">",
+            place_holder_text="",
+            radius=8,
+            border_size=2,
+            color=self.themes["app_color"]["text_foreground"],
+            selection_color=self.themes["app_color"]["white"],
+            bg_color=self.themes["app_color"]["dark_one"],
+            bg_color_active=self.themes["app_color"]["dark_three"],
+            context_color=self.themes["app_color"]["context_color"]
+        )
+        self.line_edit.setEnabled(False)
+        self.line_edit.setMinimumHeight(30)
+        self.line_edit.setMaximumWidth(150)
+        self.line_edit.setAlignment(Qt.AlignCenter)
 
         self.title_label = QLabel()
-        self.title_label.setAlignment(Qt.AlignVCenter)
+        self.title_label.setAlignment(Qt.AlignCenter)
         title_size = 10
         font_family = "Segoe UI"
         self.title_label.setStyleSheet(f'font: {title_size}pt "{font_family}"')
@@ -170,10 +220,12 @@ class CalculationOutputPanel(QDialog):
         self.layout = QVBoxLayout()
         self.layout.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(self.title_label)
+        self.layout.addWidget(self.line_edit)
         self.layout.addWidget(self.circular_progress_1)
 
         self.setLayout(self.layout)
 if __name__ == "__main__":
+
     # 初始化QApplication，界面展示要包含在QApplication初始化之后，结束之前
     app = QApplication(sys.argv)
 

@@ -52,6 +52,7 @@ class PyCircularProgress(QWidget):
         self.enable_bg = enable_bg
         self.bg_color = bg_color
 
+
     # ADD DROPSHADOW
     def add_shadow(self, enable):
         if enable:
