@@ -98,7 +98,9 @@ class AbiRechner(QWidget):
     # Tab 1
     # ///////////////////////////////////////////////////////////////////////////////////////////////
     def checkFach(self):
+        returnStr="Rechnen nicht möglich wegen folgenden Ursachen:\n"
 
+        FachNameList=[]
 
         hasTwoSameFach=False
         #BlockOne
@@ -112,11 +114,34 @@ class AbiRechner(QWidget):
         hasSport=False
         hasGemeinschaftskundeOderGeo=False
         hasReligionOderPhilo=False
-
         for Fach in self.AddedUI.faecher:
-            Fach.fachName
+            fachName=Fach.comboBoxFach.currentText()
+            FachNameList.append(fachName)
+            if fachName=="Deutsch":
+                hasDeutsch=True
+            if fachName=="Mathe":
+                hasMathe=True
+            if fachName=="Geschichte" or fachName=="Geographie" or fachName=="Gemeinschaftskunde":
+                hasGesellschaftswissenschaft=True
 
-        return "success"
+        if not hasDeutsch:
+            returnStr += "Deustch muss gewählt werden!\n"
+        if not hasMathe:
+            returnStr += "Mathe muss gewählt werden!\n"
+        if not hasGesellschaftswissenschaft:
+            returnStr += "Eine Gesellschaftswissenschaft muss gewählt werden!\n"
+
+        set_lst = set(FachNameList)
+        print(set_lst)
+
+        if len(set_lst) != len(FachNameList):
+            print("ah?")
+            hasTwoSameFach=True
+            returnStr += "Zwei gleiche Fächer werden gleichzeitiggewählt!\n"
+
+        if not hasTwoSameFach and hasDeutsch and hasMathe and hasGesellschaftswissenschaft:
+            return "success"
+        return returnStr
 
     def calculateNote(self):
 

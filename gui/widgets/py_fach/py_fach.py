@@ -108,6 +108,7 @@ class PyFach(QWidget):
         self._fachName=fachName
         self._istLeistungsfach=istLeistungsfach
         self._istAbiFach=istAbiFach
+        #self.name="Deutsch"
         # SETUP UI
         self.setup_ui()
 
@@ -136,7 +137,6 @@ class PyFach(QWidget):
 
         self.ZahlenFrame.setMaximumWidth(300)
         self.comboBoxFach = QComboBox()
-
         self.comboBoxFach.addItems(fache)
 
         self.line_edits=[]
@@ -187,6 +187,7 @@ class PyFach(QWidget):
         self.main_layout.addWidget(self.ZahlenFrame)
 
         self.slider.valueChanged.connect(lambda: self.sliderChanged())
+
     def sliderChanged(self):
         for lineEdit in self.line_edits:
             lineEdit.setText(str(self.slider.value()))
