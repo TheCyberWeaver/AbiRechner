@@ -1,6 +1,6 @@
 # ///////////////////////////////////////////////////////////////
 #
-# BY: WANDERSON M.PIMENTA
+# BY: Thomas Lu
 # PROJECT MADE WITH: Qt Designer and PySide6
 # V: 1.0.0
 #
@@ -40,11 +40,10 @@ from ..py_line_edit import PyLineEdit
 # ///////////////////////////////////////////////////////////////
 _is_maximized = False
 _old_size = QSize()
-fache=["Deutsch","Mathe","Englisch","Geschichte","Geographie","Physik","Chemie","Biologie","Sport"]
-# PY TITLE BAR
-# Top bar with move application, maximize, restore, minimize,
-# close buttons and extra buttons
-# ///////////////////////////////////////////////////////////////
+
+#TODO:Add all subjects
+NameAllerFaecher=["Deutsch", "Mathe", "Englisch", "Geschichte", "Geographie", "Physik", "Chemie", "Biologie", "Sport"]
+
 class PyFach(QWidget):
     # SIGNALS
     clicked = Signal(object)
@@ -120,8 +119,8 @@ class PyFach(QWidget):
         self.main_layout.setContentsMargins(0, 0, 0, 0)
         self.main_layout.setSpacing(0)
 
-        self.fachNameFrame = QFrame()
-        self.fachNamelayout= QVBoxLayout(self.fachNameFrame)
+        self.titleFrame = QFrame()
+        self.titleLayout= QVBoxLayout(self.titleFrame)
 
         # TITLE LABEL
         self.title_label = QLabel()
@@ -129,17 +128,18 @@ class PyFach(QWidget):
         self.title_label.setStyleSheet(f'font: {self._title_size}pt "{self._font_family}"')
         self.title_label.setText(self._fachName)
 
-        self.ZahlenEingabeFrame = QFrame()
-        self.ZahlenEingabeLayout = QHBoxLayout(self.ZahlenEingabeFrame)
+        self.marksInputLineEditsFrame = QFrame()
+        self.marksInputLineEditsLayout = QHBoxLayout(self.marksInputLineEditsFrame)
 
-        self.ZahlenFrame = QFrame()
-        self.ZahlenLayout = QVBoxLayout(self.ZahlenFrame)
+        self.rightFrame = QFrame()
+        self.rightFrame.setMaximumWidth(300)
+        self.rightLayout = QVBoxLayout(self.rightFrame)
 
-        self.ZahlenFrame.setMaximumWidth(300)
+
         self.comboBoxFach = QComboBox()
-        self.comboBoxFach.addItems(fache)
+        self.comboBoxFach.addItems(NameAllerFaecher)
 
-        self.line_edits=[]
+        self.marksInput_line_edits=[]
         numberOfLineEdit=4
         if self._istAbiFach:
             numberOfLineEdit=5
@@ -157,7 +157,7 @@ class PyFach(QWidget):
             )
             line_edit.setMinimumHeight(30)
             line_edit.setMaximumWidth(50)
-            self.line_edits.append(line_edit)
+            self.marksInput_line_edits.append(line_edit)
 
 
         self.slider = PySlider(
@@ -169,25 +169,23 @@ class PyFach(QWidget):
         self.slider.setOrientation (Qt.Orientation.Horizontal)
         self.slider.setMaximum(15)
         self.slider.setMinimum(0)
-        #self.slider.setMaximumWidth(200)
         self.slider.setMinimumHeight(25)
-        #self.slider.setTickInterval(1)
-        #self.slider.setTickPosition(QSlider.TickPosition.TicksBelow)
 
-        self.fachNamelayout.addWidget(self.title_label)
-        self.fachNamelayout.addWidget(self.comboBoxFach)
+        self.titleLayout.addWidget(self.title_label)
+        self.titleLayout.addWidget(self.comboBoxFach)
 
-        for line_edit in self.line_edits:
-            self.ZahlenEingabeLayout.addWidget(line_edit)
+        for line_edit in self.marksInput_line_edits:
+            self.marksInputLineEditsLayout.addWidget(line_edit)
 
-        self.ZahlenLayout.addWidget(self.ZahlenEingabeFrame)
-        self.ZahlenLayout.addWidget(self.slider)
+        self.rightLayout.addWidget(self.marksInputLineEditsFrame)
+        self.rightLayout.addWidget(self.slider)
 
-        self.main_layout.addWidget(self.fachNameFrame)
-        self.main_layout.addWidget(self.ZahlenFrame)
+        self.main_layout.addWidget(self.titleFrame)
+        self.main_layout.addWidget(self.rightFrame)
 
+        #change the numbers in the input area when slider has been changed
         self.slider.valueChanged.connect(lambda: self.sliderChanged())
 
     def sliderChanged(self):
-        for lineEdit in self.line_edits:
+        for lineEdit in self.marksInput_line_edits:
             lineEdit.setText(str(self.slider.value()))

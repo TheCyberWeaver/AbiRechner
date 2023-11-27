@@ -23,14 +23,8 @@ from gui.core.json_themes import Themes
 
 import sys
 
-
-#matplotlib.use('Qt5Agg')
-
-#from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
-#from matplotlib.figure import Figure
 from ui_AbiRechner import Ui_Form
 from setup_ui import SetupMainWindow
-#An Example of ploting graphs in pyside6
 
 converting_table=[(300,4.0),(301,3.9),(319,3.8),(337,3.7),(355,3.6),(373,3.5),(391,3.4),(409,3.3),(427,3.2),(445,3.1),
                   (463,3.0),(481,2.9),(499,2.8),(517,2.7),(535,2.6),(553,2.5),(571,2.4),(589,2.3),(607,2.2),(625,2.1),
@@ -66,28 +60,31 @@ class AbiRechner(QWidget):
 
     def __init__(self):
         super().__init__()
+
         self.settingFilesFolderPath = ""
-
-        # 设置界面为我们生成的界面
-        self.ui = Ui_Form()
-        self.ui.setupUi(self)
-
-
-
         settings = Settings(self.settingFilesFolderPath)
         print("[info]: using", settings.settings_path)
         self.settings = settings.items
-        # SETUP MAIN WINDOW
-        # ///////////////////////////////////////////////////////////////
-        # self.hide_grips = True  # Show/Hide resize grips
-        self.AddedUI=SetupMainWindow()
 
+        # ///////////////////////////////////////////////////////////////
+        # SETUP MAIN WINDOW WITH QT_DESIGNER DESIGNED WIDGETS
+        # ///////////////////////////////////////////////////////////////
+        self.ui = Ui_Form()
+        self.ui.setupUi(self)
+
+        # ///////////////////////////////////////////////////////////////
+        # SETUP MAIN WINDOW WITH SELF DESIGNED WIDGETS
+        # ///////////////////////////////////////////////////////////////
+        self.AddedUI=SetupMainWindow()
         self.AddedUI.setup_gui(parent=self)
 
         self.filePath=""
 
         self.uiInitiation()
 
+    """
+    connect events with different functions
+    """
     def uiInitiation(self):
         # Tab 1
         self.AddedUI.push_button_New.clicked.connect(lambda: self.AddedUI.CreateNewFach(self))
@@ -132,12 +129,10 @@ class AbiRechner(QWidget):
             returnStr += "Eine Gesellschaftswissenschaft muss gewählt werden!\n"
 
         set_lst = set(FachNameList)
-        print(set_lst)
-
         if len(set_lst) != len(FachNameList):
             print("ah?")
             hasTwoSameFach=True
-            returnStr += "Zwei gleiche Fächer werden gleichzeitiggewählt!\n"
+            returnStr += "Zwei gleiche Fächer werden gleichzeitig gewählt!\n"
 
         if not hasTwoSameFach and hasDeutsch and hasMathe and hasGesellschaftswissenschaft:
             return "success"
@@ -146,7 +141,7 @@ class AbiRechner(QWidget):
     def calculateNote(self):
 
         if self.checkFach()!="success":
-            dlg = CalculateFailedDialog(self.checkFach())
+            dlg = CalculationFailedDialog(self.checkFach())
             dlg.setWindowTitle("Calculation Failed!")
             dlg.exec_()
             return
@@ -154,8 +149,8 @@ class AbiRechner(QWidget):
 
         blockOne=0
         for Fach in self.AddedUI.faecher[:5]:
-            if Fach.line_edits[4].text()!="":
-                blockOne+=int(Fach.line_edits[4].text())*4
+            if Fach.marksInput_line_edits[4].text()!= "":
+                blockOne+= int(Fach.marksInput_line_edits[4].text()) * 4
 
         blockTwo=0
         for Fach in self.AddedUI.faecher:
@@ -163,8 +158,8 @@ class AbiRechner(QWidget):
             currentCountOfSemester=0
             for semesterIndex in range(4):
                 currentCountOfSemester+=1
-                if Fach.line_edits[semesterIndex].text()!="":
-                    sumOfFach+=int(Fach.line_edits[semesterIndex].text())
+                if Fach.marksInput_line_edits[semesterIndex].text()!= "":
+                    sumOfFach+=int(Fach.marksInput_line_edits[semesterIndex].text())
                 else:
                     sumOfFach+=sumOfFach/currentCountOfSemester
             if Fach._istLeistungsfach:
@@ -180,8 +175,10 @@ class AbiRechner(QWidget):
 
 
 
-
-class CalculateFailedDialog(QDialog):
+"""
+Displayed when Calculation cannot be done
+"""
+class CalculationFailedDialog(QDialog):
     def __init__(self,errorMessage:str):
         super().__init__()
 
@@ -197,8 +194,11 @@ class CalculateFailedDialog(QDialog):
         self.layout.addWidget(self.buttonBox)
         self.setLayout(self.layout)
 
+"""
+Displayed when Calculation is done
+"""
 class CalculationOutputPanel(QDialog):
-    def __init__(self,note):
+    def __init__(self, totalPointsIn900):
         super().__init__()
         self.settings = Settings("").items
         self.themes = Themes().items
@@ -207,7 +207,7 @@ class CalculationOutputPanel(QDialog):
         self.setMinimumHeight(200)
         self.setMinimumWidth(300)
 
-        notePercentage=round(note/900*100)
+        notePercentage=round(totalPointsIn900 / 900 * 100)
         self.circular_progress_1 = PyCircularProgress(
             value=notePercentage,
             progress_color=self.themes["app_color"]["pink"],
@@ -218,9 +218,9 @@ class CalculationOutputPanel(QDialog):
 
         self.circular_progress_1.setFixedSize(100, 100)
 
-
+        #Area that display the AbiNote
         self.line_edit = PyLineEdit(
-            text=str(convert900to6(note))+" <"+str(round(note))+">",
+            text=str(convert900to6(totalPointsIn900)) + " <" + str(round(totalPointsIn900)) + ">",
             place_holder_text="",
             radius=8,
             border_size=2,
@@ -244,6 +244,7 @@ class CalculationOutputPanel(QDialog):
 
         self.layout = QVBoxLayout()
         self.layout.setAlignment(Qt.AlignCenter)
+
         self.layout.addWidget(self.title_label)
         self.layout.addWidget(self.line_edit)
         self.layout.addWidget(self.circular_progress_1)
@@ -251,10 +252,9 @@ class CalculationOutputPanel(QDialog):
         self.setLayout(self.layout)
 if __name__ == "__main__":
 
-    # 初始化QApplication，界面展示要包含在QApplication初始化之后，结束之前
     app = QApplication(sys.argv)
 
-    # 初始化并展示我们的界面组件
+    # initialization
     window = AbiRechner()
     print("[info]: Process", window.settings["app_name"], "is starting")
     window.show()
