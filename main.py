@@ -95,6 +95,7 @@ class AbiRechner(QWidget):
     # Tab 1
     # ///////////////////////////////////////////////////////////////////////////////////////////////
     def checkFach(self):
+        #return "success"
         returnStr="Rechnen nicht möglich wegen folgenden Ursachen:\n"
 
         FachNameList=[]
@@ -111,6 +112,7 @@ class AbiRechner(QWidget):
         hasSport=False
         hasGemeinschaftskundeOderGeo=False
         hasReligionOderPhilo=False
+
         for Fach in self.AddedUI.faecher:
             fachName=Fach.comboBoxFach.currentText()
             FachNameList.append(fachName)
@@ -118,19 +120,37 @@ class AbiRechner(QWidget):
                 hasDeutsch=True
             if fachName=="Mathe":
                 hasMathe=True
+            if fachName=="Englisch" or fachName=="Spanisch" or fachName=="Französisch" or fachName=="Russisch" or fachName=="Latein":
+                hasfremdSprache=True
             if fachName=="Geschichte" or fachName=="Geographie" or fachName=="Gemeinschaftskunde":
                 hasGesellschaftswissenschaft=True
+            if fachName=="Musik" or fachName=="Kunst":
+                hasMusikOderKunst=True
+            if fachName=="Sport":
+                hasSport=True
+            if fachName=="Philosophie" or fachName=="Religion":
+                hasReligionOderPhilo=True
 
+        if len(self.AddedUI.faecher)<8:
+            returnStr += "Nicht genug Fächer gewählt!\n"
         if not hasDeutsch:
             returnStr += "Deustch muss gewählt werden!\n"
         if not hasMathe:
             returnStr += "Mathe muss gewählt werden!\n"
         if not hasGesellschaftswissenschaft:
             returnStr += "Eine Gesellschaftswissenschaft muss gewählt werden!\n"
+        if not hasfremdSprache:
+            returnStr += "Eine FremdSprache muss gewählt werden!\n"
+        if not hasMusikOderKunst:
+            returnStr += "Musik oder Kunst muss gewählt werden!\n"
+        if not hasSport:
+            returnStr += "Sport muss gewählt werden!\n"
+        if not hasReligionOderPhilo:
+            returnStr += "Religion oder Philosophie muss gewählt werden!\n"
 
         set_lst = set(FachNameList)
         if len(set_lst) != len(FachNameList):
-            print("ah?")
+
             hasTwoSameFach=True
             returnStr += "Zwei gleiche Fächer werden gleichzeitig gewählt!\n"
 
@@ -153,6 +173,7 @@ class AbiRechner(QWidget):
                 blockOne+= int(Fach.marksInput_line_edits[4].text()) * 4
 
         blockTwo=0
+        sumOfFachList=[]
         for Fach in self.AddedUI.faecher:
             sumOfFach=0
             currentCountOfSemester=0
@@ -165,7 +186,17 @@ class AbiRechner(QWidget):
             if Fach._istLeistungsfach:
                 blockTwo+=sumOfFach*2
             else:
-                blockTwo += sumOfFach
+                sumOfFachList.append(sumOfFach)
+        sumOfFachList.sort(reverse=True)
+        print(sumOfFachList)
+        if sumOfFachList[6]>sum(sumOfFachList[:6])/6:
+            for i in sumOfFachList[:7]:
+                blockTwo+=i
+            blockTwo=blockTwo*40/44
+        else:
+            for i in sumOfFachList[:6]:
+                blockTwo+=i
+
         totalNote=blockTwo+blockOne
 
         dlg = CalculationOutputPanel(totalNote)

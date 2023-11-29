@@ -42,7 +42,14 @@ _is_maximized = False
 _old_size = QSize()
 
 #TODO:Add all subjects
-NameAllerFaecher=["Deutsch", "Mathe", "Englisch", "Geschichte", "Geographie", "Physik", "Chemie", "Biologie", "Sport"]
+NameAllerFaecher=["Deutsch", "Mathe",
+                  "Englisch", "Spanisch", "Französisch","Latein","Russisch",
+                  "Geschichte", "Info",
+                  "Physik", "Chemie", "Biologie",
+                  "Musik","Kunst",
+                  "Religion", "Philosophie",
+                  "Gemeinschaftskunde","Geographie",
+                  "Sport"]
 
 class PyFach(QWidget):
     # SIGNALS
